@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="X:\Geek\Поиск работы\Apps\ildar\.venv"
+VIRTUAL_ENV="x:\Geek\Поиск работы\Apps\ildar\.venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
