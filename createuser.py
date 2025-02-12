@@ -20,4 +20,5 @@ def create_user(username, password):
 
 
 # Замените 'admin' и 'your_password' на желаемые имя пользователя и пароль
-create_user('rail', 'd4SiaDo7cyUAC4gjWzYa')
+create_user('rail', '56sI7IJTn4EWrn5I3GTg')
+create_user('ildar', 'fk09Kfj94nvfd8')
