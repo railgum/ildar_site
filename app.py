@@ -1,5 +1,10 @@
 import sqlite3  # подключаем Sqlite в проект
 import hashlib  # библиотека для хеширования !!! заменить на что-нибудь понадежнее !!!
+import os
+import datetime
+
+from werkzeug.utils import secure_filename
+# Обеспечивает безопасность имён файлов, загруженных пользователями, предотвращая атаки через манипуляции с файловой системой.
 
 from flask import Flask, render_template, redirect, url_for, request, session
 # Flask - библиотека для запуска нашего приложения Flask - app
@@ -13,13 +18,19 @@ app = Flask(__name__)
 app.secret_key = '5jfjkvdfsKLkds09KFM4M&4'
 # КЛЮЧ ДЛЯ ХЭШИРОВАНИЯ !!! конфиг-файл !!!
 
+path_to_save_images = os.path.join(app.root_path, 'static', 'imgs')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+
 # Соединение с БД
-
-
 def get_db_connection():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 #  корневая страница лендинга
@@ -27,8 +38,36 @@ def get_db_connection():
 
 @app.route('/')
 def home():
+    conn = get_db_connection()
+    # Получаем все записи из таблицы content
+    blocks = conn.execute('SELECT * FROM content').fetchall()
+    conn.close()
+    # Преобразование данных из БД в список словарей
+    blocks_list = [dict(ix) for ix in blocks]
+    # print(blocks_list) [{строка 1 из бд},{строка 2 из бд},{строка 3 из бд}, строка 4 из бд]
+
+    # Теперь нужно сделать группировку списка в один словарь json
+    # Группировка данных в словарь JSON
+    json_data = {}
+    for raw in blocks_list:
+        # Создание новой записи, если ключ еще не существует
+        if raw['idblock'] not in json_data:
+            json_data[raw['idblock']] = []
+
+        # Добавление данных в существующий ключ
+        json_data[raw['idblock']].append({
+            'id': raw['id'],
+            'short_title': raw['short_title'],
+            'img': raw['img'],
+            'altimg': raw['altimg'],
+            'title': raw['title'],
+            'contenttext': raw['contenttext'],
+            'author': raw['author'],
+            'timestampdata': raw['timestampdata']
+        })
+
     # Загрузка и отображение главной страницы (landing page)
-    return render_template('landing.html')
+    return render_template('landing.html', json_data=json_data)
 
 
 # страница формы логина в админ панель
@@ -77,7 +116,72 @@ def admin_panel():
     # дополнительная проверка на сессию
     if 'user_id' not in session:
         return redirect(url_for('admin_login'))
-    return render_template('admin_panel.html')
+    conn = get_db_connection()
+    # Получаем все записи из таблицы content
+    blocks = conn.execute('SELECT * FROM content').fetchall()
+    conn.close()
+
+    # Преобразование данных из БД в список словарей
+    blocks_list = [dict(ix) for ix in blocks]
+    # print(blocks_list) [{строка 1 из бд},{строка 2 из бд},{строка 3 из бд}, {строка 4 из бд}]
+
+    # Теперь нужно сделать группировку списка в один словарь json
+    # Группировка данных в словарь JSON
+    json_data = {}
+    for raw in blocks_list:
+        # Создание новой записи, если ключ еще не существует
+        if raw['idblock'] not in json_data:
+            json_data[raw['idblock']] = []
+
+        json_data[raw['idblock']].append({
+            'id': raw['id'],
+            'short_title': raw['short_title'],
+            'img': raw['img'],
+            'altimg': raw['altimg'],
+            'title': raw['title'],
+            'contenttext': raw['contenttext'],
+            'author': raw['author'],
+            'timestampdata': raw['timestampdata']
+        })
+    # print(json_data)
+    # передаем json на фронт - далее нужно смотреть admin_panel.html и обрабатывать там
+    return render_template('admin_panel.html', json_data=json_data)
+
+
+@app.route('/update_content', methods=['POST'])
+def update_content():
+    content_id = request.form['id']
+    short_title = request.form['short_title']
+    title = request.form['title']
+    altimg = 'Photo'
+    contenttext = request.form['contenttext']
+    author_id = request.form['user_id']
+    date_time = datetime.datetime.now()
+
+    print(author_id, date_time)
+
+    # Обработка загруженного файла
+    file = request.files['img']
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        save_path = os.path.join(path_to_save_images, filename)
+        imgpath = "/static/imgs/" + filename
+        file.save(save_path)
+
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    if file:
+        cursor.execute('UPDATE content SET short_title=?, img=?, altimg=?, title=?, contenttext=? WHERE id=?',
+                       (short_title, imgpath, altimg, title, contenttext, content_id))
+    else:
+        cursor.execute('UPDATE content SET short_title=?, altimg=?, title=?, contenttext=? WHERE id=?',
+                       (short_title, altimg, title, contenttext, content_id))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('admin_panel'))
 
 
 if __name__ == '__main__':
