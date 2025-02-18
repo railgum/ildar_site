@@ -4,6 +4,7 @@ import os
 import datetime
 
 from werkzeug.utils import secure_filename
+from PIL import Image, ImageOps, ImageGrab
 # Обеспечивает безопасность имён файлов, загруженных пользователями, предотвращая атаки через манипуляции с файловой системой.
 
 from flask import Flask, render_template, redirect, url_for, request, session
@@ -20,22 +21,35 @@ app.secret_key = '5jfjkvdfsKLkds09KFM4M&4'
 
 path_to_save_images = os.path.join(app.root_path, 'static', 'imgs')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
+SLIDER = 'Slider'
+MAX_SIZE_SLIDER = (1024, 500)
+MINICARDS = 'miniCards'
+MAX_SIZE_MINICARDS = (256, 256)
 
 # Соединение с БД
+
+
 def get_db_connection():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     return conn
 
 
+# проверка расширения файла изображения
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+# получение логина редактирующего
+def getName(conn, userID: int):
+    c = conn.cursor()
+    c.execute("SELECT username FROM users WHERE id = ?", (userID, ))
+    result = c.fetchone()
+    if result:
+        return result[0]
+
+
 #  корневая страница лендинга
-
-
 @app.route('/')
 def home():
     conn = get_db_connection()
@@ -102,12 +116,13 @@ def admin_login():
     return render_template('login_adm.html', error=error)
 
 
+# Выход из админки
 @app.route('/logout')
 def logout():
     # Удаление данных пользователя из сессии
     session.clear()
     # перенаправление на главную страницу или страницу входа
-    return redirect(url_for('admin_login'))
+    return redirect(url_for('home'))
 
 
 # Страница админ панели
@@ -119,12 +134,13 @@ def admin_panel():
     conn = get_db_connection()
     # Получаем все записи из таблицы content
     blocks = conn.execute('SELECT * FROM content').fetchall()
+    name_admin = getName(conn, session['user_id'])
+
     conn.close()
 
     # Преобразование данных из БД в список словарей
     blocks_list = [dict(ix) for ix in blocks]
     # print(blocks_list) [{строка 1 из бд},{строка 2 из бд},{строка 3 из бд}, {строка 4 из бд}]
-
     # Теперь нужно сделать группировку списка в один словарь json
     # Группировка данных в словарь JSON
     json_data = {}
@@ -143,11 +159,16 @@ def admin_panel():
             'author': raw['author'],
             'timestampdata': raw['timestampdata']
         })
+    context = {
+        'json_data': json_data,
+        'name_admin': name_admin,
+    }
     # print(json_data)
     # передаем json на фронт - далее нужно смотреть admin_panel.html и обрабатывать там
-    return render_template('admin_panel.html', json_data=json_data)
+    return render_template('admin_panel.html', **context)
 
 
+# Обновление информации
 @app.route('/update_content', methods=['POST'])
 def update_content():
     content_id = request.form['id']
@@ -156,7 +177,7 @@ def update_content():
     altimg = 'Photo'
     contenttext = request.form['contenttext']
     author_id = request.form['user_id']
-    date_time = datetime.datetime.now()
+    date_time = datetime.datetime.now().strftime('%d/%m/%y %H:%M')
 
     print(author_id, date_time)
 
@@ -167,16 +188,27 @@ def update_content():
         filename = secure_filename(file.filename)
         save_path = os.path.join(path_to_save_images, filename)
         imgpath = "/static/imgs/" + filename
+
+        file = Image.open(file)
+
+        if short_title == SLIDER:
+            file = ImageOps.fit(file, MAX_SIZE_SLIDER, centering=(0.5, 0.5))
+            imgpath = "/static/imgs/slider" + filename
+
+        elif short_title == MINICARDS:
+            file = ImageOps.fit(file, MAX_SIZE_MINICARDS, centering=(0.5, 0.5))
+            imgpath = "/static/imgs/minicards" + filename
         file.save(save_path)
 
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
+    author = getName(conn, author_id)
     if file:
-        cursor.execute('UPDATE content SET short_title=?, img=?, altimg=?, title=?, contenttext=? WHERE id=?',
-                       (short_title, imgpath, altimg, title, contenttext, content_id))
+        cursor.execute('UPDATE content SET short_title=?, img=?, altimg=?, title=?, contenttext=?, author=?, timestampdata=? WHERE id=?',
+                       (short_title, imgpath, altimg, title, contenttext, author, date_time, content_id))
     else:
-        cursor.execute('UPDATE content SET short_title=?, altimg=?, title=?, contenttext=? WHERE id=?',
-                       (short_title, altimg, title, contenttext, content_id))
+        cursor.execute('UPDATE content SET short_title=?, altimg=?, title=?, contenttext=?, author=?, timestampdata=? WHERE id=?',
+                       (short_title, altimg, title, contenttext, author, date_time, content_id))
 
     conn.commit()
     conn.close()

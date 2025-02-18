@@ -22,8 +22,8 @@
 				<div class="tab-pane fade" id="v-pills-{{ j_key }}" role="tabpanel"
 				     aria-labelledby="v-pills-{{ j_key }}-tab">
 					{% for item in j_value %}
-                        <form action="update_content" method="POST" enctype="multipart/form-data"> <!-- Отправляем 1 сегмент блока через POST на endpoint update_content -->
-                            <h3><input type="text" name="short_title" value="{{ item.short_title }}"></h3> <!-- название блока в меню header -->
+                        <form class="form_admin_panel" action="update_content" method="POST" enctype="multipart/form-data"> <!-- Отправляем 1 сегмент блока через POST на endpoint update_content -->
+                            <h3><input type="text" name="short_title" value="{{ item.short_title }}"></h3> название блока в меню header
                             <img src=".{{ item.img }}" alt="{{ item.altimg }}"> <!-- показываем изображение которое сейчас доступно -->
                             <input type="file" name="img" multiple> <!-- загрузка нового изображения -->
                             <p><input type="text" name="title" value="{{ item.title }}"></p> <!--заголовок контента-->

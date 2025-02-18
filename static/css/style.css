@@ -1,0 +1,65 @@
+/* Стили для лэндинга */
+
+.carousel-inner {
+    max-width: 1024px;
+    margin: auto;
+    height: 500px;
+    /* Высота карусели */
+}
+
+.carousel-inner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Обрезка или масштабирование изображения */
+}
+
+.carousel-caption {
+    text-align: left;
+    /* Выравнивание текста по левому краю */
+    bottom: 30%;
+    /* Приподнять текст и кнопку вверх */
+    right: 40%;
+    /* Центрирование по правому краю */
+    transform: translateX(0%);
+    /* Корректировка положения */
+    background-color: rgba(0, 0, 0, 0.1);
+    /* Небольшой фон для улучшения читаемости */
+    padding: 10px;
+}
+
+
+/* Стили для админ-панели */
+
+.form_admin_panel {
+    margin-bottom: 40px;
+}
+
+/* Стили для бокового меню */
+#sidebarMenu {
+    min-height: 100vh;
+    /* Высота на всю высоту вьюпорта */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Тень для бокового меню */
+    z-index: 1000;
+    /* Устанавливаем z-index, чтобы меню было поверх основного контента */
+}
+
+.sidebar .nav-link {
+    border-radius: 0;
+    /* Убираем закругление углов */
+    color: #333;
+    /* Цвет текста */
+}
+
+.sidebar .nav-link:hover {
+    background: #f8f9fa;
+    /* Фон при наведении */
+}
+
+.sidebar .nav-link.active {
+    background-color: #007bff;
+    /* Фон для активной ссылки */
+    color: white;
+    /* Цвет текста для активной ссылки */
+}
