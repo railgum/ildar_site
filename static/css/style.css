@@ -63,3 +63,14 @@
     color: white;
     /* Цвет текста для активной ссылки */
 }
+
+.btn_local {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    /* Отступы для кнопок */
+}
+
+.input_padding {
+    margin-right: 20px;
+    margin-top: 20px;
+}

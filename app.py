@@ -41,9 +41,17 @@ def allowed_file(filename):
 
 
 # получение логина редактирующего
-def getName(conn, userID: int):
-    c = conn.cursor()
-    c.execute("SELECT username FROM users WHERE id = ?", (userID, ))
+# def getName(conn, userID: int):
+#     c = conn.cursor()
+#     c.execute("SELECT username FROM users WHERE id = ?", (userID, ))
+#     result = c.fetchone()
+#     if result:
+#         return result[0]
+
+
+def getOneValueFromBase(connection, data, database, dataId: int):
+    c = connection.cursor()
+    c.execute(f'SELECT {data} FROM {database} WHERE id = ?', (dataId, ))
     result = c.fetchone()
     if result:
         return result[0]
@@ -134,8 +142,9 @@ def admin_panel():
     conn = get_db_connection()
     # Получаем все записи из таблицы content
     blocks = conn.execute('SELECT * FROM content').fetchall()
-    name_admin = getName(conn, session['user_id'])
-
+    # name_admin = getName(conn, session['user_id'])
+    name_admin = getOneValueFromBase(
+        conn, 'username', 'users', session['user_id'])
     conn.close()
 
     # Преобразование данных из БД в список словарей
@@ -171,38 +180,41 @@ def admin_panel():
 # Обновление информации
 @app.route('/update_content', methods=['POST'])
 def update_content():
+
     content_id = request.form['id']
-    short_title = request.form['short_title']
+    # short_title = request.form['short_title']
     title = request.form['title']
     altimg = 'Photo'
     contenttext = request.form['contenttext']
     author_id = request.form['user_id']
     date_time = datetime.datetime.now().strftime('%d/%m/%y %H:%M')
-
-    print(author_id, date_time)
-
+    conn = get_db_connection()
+    short_title = getOneValueFromBase(
+        conn, 'short_title', 'content', content_id)
+    conn.close()
     # Обработка загруженного файла
     file = request.files['img']
 
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        save_path = os.path.join(path_to_save_images, filename)
+        save_path = os.path.join(
+            path_to_save_images, f'{short_title}/{filename}')
         imgpath = "/static/imgs/" + filename
 
         file = Image.open(file)
 
         if short_title == SLIDER:
             file = ImageOps.fit(file, MAX_SIZE_SLIDER, centering=(0.5, 0.5))
-            imgpath = "/static/imgs/slider" + filename
+            imgpath = f'/static/imgs/{short_title}/' + filename
 
         elif short_title == MINICARDS:
             file = ImageOps.fit(file, MAX_SIZE_MINICARDS, centering=(0.5, 0.5))
-            imgpath = "/static/imgs/minicards" + filename
+            imgpath = f'/static/imgs/{short_title}/' + filename
         file.save(save_path)
 
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    author = getName(conn, author_id)
+    author = getOneValueFromBase(conn, 'username', 'users', author_id)
     if file:
         cursor.execute('UPDATE content SET short_title=?, img=?, altimg=?, title=?, contenttext=?, author=?, timestampdata=? WHERE id=?',
                        (short_title, imgpath, altimg, title, contenttext, author, date_time, content_id))
