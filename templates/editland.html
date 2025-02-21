@@ -31,29 +31,33 @@
                             <input type="file" name="img" multiple> <!-- загрузка нового изображения -->
                             <input type="hidden" name="id" value="{{ item.id }}"> <!-- id контента - поле скрыто -->
                             <input type="hidden" name="user_id" value="{{ session['user_id'] }}">
+							<input type="hidden" name="short_title" value="{{ item.short_title }}">
+							<input type="hidden" name="id_block" value="{{ j_key }}">
                             <button type="submit" class="btn btn-primary btn_local">Сохранить изменения</button>
 							{% if item == j_value[-1] %}
-								<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+							    <hr>
+								<button type="button" class="btn btn-primary btn_local" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
 									Добавить ещё <span>{{ item.short_title }}</span> <!-- добавление элемента -->
 								</button>
-								<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+								<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
 									<div class="modal-dialog">
 									  <div class="modal-content">
 										<div class="modal-header">
-										  <h5 class="modal-title" id="exampleModalLabel">Добавление элемента</h5>
+										  <h5 class="modal-title" id="staticBackdropLabel">Добавление элемента</h5>
 										  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
 										</div>
 										<div class="modal-body">
-										    <p><input type="text" name="title" value="{{ item.title }}"></p> <!--заголовок контента-->
-                                            <p><textarea name="contenttext" rows="5" cols="50">{{ item.contenttext }}</textarea></p> <!--текст контента-->
-							                <img src=".{{ item.img }}" alt="{{ item.altimg }}"> <!-- показываем изображение которое сейчас доступно -->
-                                            <input type="file" name="img" multiple> <!-- загрузка нового изображения -->
-                                            <input type="hidden" name="id" value="{{ item.id }}"> <!-- id контента - поле скрыто -->
-                                             <input type="hidden" name="user_id" value="{{ session['user_id'] }}">
+											<p><input type="text" name="new_title" placeholder="Название"></p> <!--заголовок контента-->
+											<p><textarea name="new_contenttext" rows="5" cols="40" placeholder="Текст"></textarea></p> <!--текст контента-->
+											<input type="file" name="new_img" multiple> <!-- загрузка нового изображения -->
+											<!-- <input type="hidden" name="id" value="{{ item.id }}"> -->
+											<!-- <input type="hidden" name="user_id" value="{{ session['user_id'] }}"> -->
+											<input type="hidden" name="id_block" value="{{ j_key }}">
+											<!-- <input type="hidden" name="short_title" value="{{ item.short_title }}"> -->
 										</div>
 										<div class="modal-footer">
-										  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-										  <button type="button" class="btn btn-primary">Сохранить изменения</button>
+											<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+											<button type="submit" name="new_item" class="btn btn-primary btn_local">Сохранить изменения</button>
 										</div>
 									  </div>
 									</div>
@@ -64,9 +68,7 @@
 					{% endfor %}
 				    
 				</div>
-			    <!-- </div class="add_item">
-			        <p><input type="text" name="add_item">Добавить ещё <span>{{ j_key.short_title }}</span></p>
-		        </div> -->
+			    
 			{% endfor %}
 		</div>
 	</div>

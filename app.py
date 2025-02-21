@@ -40,6 +40,25 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+# Функция обработки изображения
+def process_img_file(file, short_title):
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        save_path = os.path.join(
+            path_to_save_images, f'{short_title}/{filename}')
+        imgpath = f'/static/imgs/{short_title}/' + filename
+        file = Image.open(file)
+
+        # Обработка загруженного файла
+        if short_title == SLIDER:
+            file = ImageOps.fit(file, MAX_SIZE_SLIDER, centering=(0.5, 0.5))
+        elif short_title == MINICARDS:
+            file = ImageOps.fit(file, MAX_SIZE_MINICARDS, centering=(0.5, 0.5))
+        file.save(save_path)
+        return imgpath
+    else:
+        return None
+
 # получение логина редактирующего
 # def getName(conn, userID: int):
 #     c = conn.cursor()
@@ -180,47 +199,37 @@ def admin_panel():
 # Обновление информации
 @app.route('/update_content', methods=['POST'])
 def update_content():
-
-    content_id = request.form['id']
-    # short_title = request.form['short_title']
-    title = request.form['title']
+    short_title = request.form['short_title']
     altimg = 'Photo'
-    contenttext = request.form['contenttext']
     author_id = request.form['user_id']
     date_time = datetime.datetime.now().strftime('%d/%m/%y %H:%M')
-    conn = get_db_connection()
-    short_title = getOneValueFromBase(
-        conn, 'short_title', 'content', content_id)
-    conn.close()
-    # Обработка загруженного файла
-    file = request.files['img']
+    idblock = request.form['id_block']
 
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        save_path = os.path.join(
-            path_to_save_images, f'{short_title}/{filename}')
-        imgpath = "/static/imgs/" + filename
-
-        file = Image.open(file)
-
-        if short_title == SLIDER:
-            file = ImageOps.fit(file, MAX_SIZE_SLIDER, centering=(0.5, 0.5))
-            imgpath = f'/static/imgs/{short_title}/' + filename
-
-        elif short_title == MINICARDS:
-            file = ImageOps.fit(file, MAX_SIZE_MINICARDS, centering=(0.5, 0.5))
-            imgpath = f'/static/imgs/{short_title}/' + filename
-        file.save(save_path)
+    title = request.form['title']
+    contenttext = request.form['contenttext']
 
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     author = getOneValueFromBase(conn, 'username', 'users', author_id)
-    if file:
-        cursor.execute('UPDATE content SET short_title=?, img=?, altimg=?, title=?, contenttext=?, author=?, timestampdata=? WHERE id=?',
-                       (short_title, imgpath, altimg, title, contenttext, author, date_time, content_id))
+
+    if 'new_item' in request.form:
+        new_title = request.form['new_title']
+        new_contenttext = request.form['new_contenttext']
+        new_img_file = request.files['new_img']
+        imgpath = process_img_file(new_img_file, short_title)
+        cursor.execute('INSERT INTO content (idblock, short_title, img, altimg, title, contenttext, author, timestampdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                       (idblock, short_title, imgpath, altimg, new_title, new_contenttext, author, date_time))
+
     else:
-        cursor.execute('UPDATE content SET short_title=?, altimg=?, title=?, contenttext=?, author=?, timestampdata=? WHERE id=?',
-                       (short_title, altimg, title, contenttext, author, date_time, content_id))
+        content_id = request.form['id']
+        file = request.files['img']
+        imgpath = process_img_file(file, short_title)
+        if file:
+            cursor.execute('UPDATE content SET short_title=?, img=?, altimg=?, title=?, contenttext=?, author=?, timestampdata=? WHERE id=?',
+                           (short_title, imgpath, altimg, title, contenttext, author, date_time, content_id))
+        else:
+            cursor.execute('UPDATE content SET short_title=?, altimg=?, title=?, contenttext=?, author=?, timestampdata=? WHERE id=?',
+                           (short_title, altimg, title, contenttext, author, date_time, content_id))
 
     conn.commit()
     conn.close()
