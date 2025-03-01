@@ -15,6 +15,31 @@
 
 				</button>
 			{% endfor %}
+			<button type="button" class="nav-link" data-bs-toggle="modal" data-bs-target="#myModal">Add Item</button>
+			<form class="form_admin_panel border-bottom" action="add_block" method="POST" enctype="multipart/form-data">
+				<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+					<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="myModalLabel">Добавление блока</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<p><input type="text" name="new_featurette" placeholder="Номер раздела"></p>
+							<p><input type="text" name="new_title_featurette" placeholder="Название блока"></p> <!--заголовок контента-->
+							<p><textarea name="new_contenttext_featurette" rows="5" cols="40" placeholder="Текст"></textarea></p> <!--текст контента-->
+							<input type="file" name="new_img_featurette" multiple> <!-- загрузка нового изображения -->
+                            <input type="hidden" name="user_id" value="{{ session['user_id'] }}">
+
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+							<button type="submit" name="new_block" class="btn btn-primary">Сохранить изменения</button>
+						</div>
+					</div>
+					</div>
+				</div>
+			</form>
 		</div>
 
 		<div class="tab-content" id="v-pills-tabContent">
@@ -33,17 +58,17 @@
                             <input type="hidden" name="user_id" value="{{ session['user_id'] }}">
 							<input type="hidden" name="short_title" value="{{ item.short_title }}">
 							<input type="hidden" name="id_block" value="{{ j_key }}">
-                            <button type="submit" class="btn btn-primary btn_local">Сохранить изменения</button>
+                            <button type="submit" class="btn btn-primary btn-local">Сохранить изменения</button>
 							{% if item == j_value[-1] %}
 							    <hr>
-								<button type="button" class="btn btn-primary btn_local" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+								<button type="button" class="btn btn-primary btn-local" data-bs-toggle="modal" data-bs-target="#myModal{{ j_key }}">
 									Добавить ещё <span>{{ item.short_title }}</span> <!-- добавление элемента -->
 								</button>
-								<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+								<div class="modal fade" id="myModal{{ j_key }}" tabindex="-1" aria-labelledby="myModal{{ j_key }}Label" aria-hidden="true">
 									<div class="modal-dialog">
 									  <div class="modal-content">
 										<div class="modal-header">
-										  <h5 class="modal-title" id="staticBackdropLabel">Добавление элемента</h5>
+										  <h5 class="modal-title" id="myModal{{ j_key }}Label">Добавление элемента</h5>
 										  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
 										</div>
 										<div class="modal-body">
@@ -52,12 +77,12 @@
 											<input type="file" name="new_img" multiple> <!-- загрузка нового изображения -->
 											<!-- <input type="hidden" name="id" value="{{ item.id }}"> -->
 											<!-- <input type="hidden" name="user_id" value="{{ session['user_id'] }}"> -->
-											<input type="hidden" name="id_block" value="{{ j_key }}">
+											<!-- <input type="hidden" name="id_block" value="{{ j_key }}"> -->
 											<!-- <input type="hidden" name="short_title" value="{{ item.short_title }}"> -->
 										</div>
 										<div class="modal-footer">
 											<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-											<button type="submit" name="new_item" class="btn btn-primary btn_local">Сохранить изменения</button>
+											<button type="submit" name="new_item" class="btn btn-primary btn-local">Сохранить изменения</button>
 										</div>
 									  </div>
 									</div>

@@ -2,12 +2,14 @@ import sqlite3  # подключаем Sqlite в проект
 import hashlib  # библиотека для хеширования !!! заменить на что-нибудь понадежнее !!!
 import os
 import datetime
+import re
 
 from werkzeug.utils import secure_filename
 from PIL import Image, ImageOps, ImageGrab
 # Обеспечивает безопасность имён файлов, загруженных пользователями, предотвращая атаки через манипуляции с файловой системой.
 
 from flask import Flask, render_template, redirect, url_for, request, session
+from config import *
 # Flask - библиотека для запуска нашего приложения Flask - app
 # render_template - нужен для того, чтобы ваша страница html отобразилась корректно
 # redirect - понадобится для обработки запросов формы, где мы перенаправим пользователя на страницу админ панели
@@ -16,15 +18,9 @@ from flask import Flask, render_template, redirect, url_for, request, session
 #
 
 app = Flask(__name__)
-app.secret_key = '5jfjkvdfsKLkds09KFM4M&4'
-# КЛЮЧ ДЛЯ ХЭШИРОВАНИЯ !!! конфиг-файл !!!
-
+app.secret_key = SECRET_KEY
 path_to_save_images = os.path.join(app.root_path, 'static', 'imgs')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-SLIDER = 'Slider'
-MAX_SIZE_SLIDER = (1024, 500)
-MINICARDS = 'miniCards'
-MAX_SIZE_MINICARDS = (256, 256)
+
 
 # Соединение с БД
 
@@ -54,20 +50,16 @@ def process_img_file(file, short_title):
             file = ImageOps.fit(file, MAX_SIZE_SLIDER, centering=(0.5, 0.5))
         elif short_title == MINICARDS:
             file = ImageOps.fit(file, MAX_SIZE_MINICARDS, centering=(0.5, 0.5))
+        elif short_title == FEATURETTE:
+            file = ImageOps.fit(file, MAX_SIZE_FEATURETTE,
+                                centering=(0.5, 0.5))
         file.save(save_path)
         return imgpath
     else:
         return None
 
-# получение логина редактирующего
-# def getName(conn, userID: int):
-#     c = conn.cursor()
-#     c.execute("SELECT username FROM users WHERE id = ?", (userID, ))
-#     result = c.fetchone()
-#     if result:
-#         return result[0]
 
-
+# получение одного значения из БД по ID
 def getOneValueFromBase(connection, data, database, dataId: int):
     c = connection.cursor()
     c.execute(f'SELECT {data} FROM {database} WHERE id = ?', (dataId, ))
@@ -85,9 +77,7 @@ def home():
     conn.close()
     # Преобразование данных из БД в список словарей
     blocks_list = [dict(ix) for ix in blocks]
-    # print(blocks_list) [{строка 1 из бд},{строка 2 из бд},{строка 3 из бд}, строка 4 из бд]
 
-    # Теперь нужно сделать группировку списка в один словарь json
     # Группировка данных в словарь JSON
     json_data = {}
     for raw in blocks_list:
@@ -219,7 +209,6 @@ def update_content():
         imgpath = process_img_file(new_img_file, short_title)
         cursor.execute('INSERT INTO content (idblock, short_title, img, altimg, title, contenttext, author, timestampdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                        (idblock, short_title, imgpath, altimg, new_title, new_contenttext, author, date_time))
-
     else:
         content_id = request.form['id']
         file = request.files['img']
@@ -234,6 +223,30 @@ def update_content():
     conn.commit()
     conn.close()
 
+    return redirect(url_for('admin_panel'))
+
+
+# Добавление нового блока
+@app.route('/add_block', methods=['POST'])
+def add_block():
+    feat = request.form['new_featurette']
+    short_title = 'featurette' + feat
+    title = request.form['new_title_featurette']
+    text = request.form['new_contenttext_featurette']
+    file = request.files['new_img_featurette']
+    imgpath = process_img_file(file, 'features')
+    altimg = 'Photo'
+    author_id = request.form['user_id']
+    date_time = datetime.datetime.now().strftime('%d/%m/%y %H:%M')
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    author = getOneValueFromBase(conn, 'username', 'users', author_id)
+    if file:
+        cursor.execute('INSERT INTO content (idblock, short_title, img, altimg, title, contenttext, author, timestampdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (
+            'features', short_title, imgpath, altimg, title, text, author, date_time))
+
+    conn.commit()
+    conn.close()
     return redirect(url_for('admin_panel'))
 
 
