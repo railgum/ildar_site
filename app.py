@@ -249,29 +249,5 @@ def update_content():
     return redirect(url_for('admin_panel'))
 
 
-# # Добавление нового блока
-# @app.route('/add_block', methods=['POST'])
-# def add_block():
-#     feat = request.form['new_featurette']
-#     short_title = 'featurette' + feat
-#     title = request.form['new_title_featurette']
-#     text = request.form['new_contenttext_featurette']
-#     file = request.files['new_img_featurette']
-#     imgpath = process_img_file(file, 'features')
-#     altimg = 'Photo'
-#     author_id = request.form['user_id']
-#     date_time = datetime.datetime.now().strftime('%d/%m/%y %H:%M')
-#     conn = sqlite3.connect('database.db')
-#     cursor = conn.cursor()
-#     author = getOneValueFromBase(conn, 'username', 'users', author_id)
-#     if file:
-#         cursor.execute('INSERT INTO content (idblock, short_title, img, altimg, title, contenttext, author, timestampdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (
-#             'features', short_title, imgpath, altimg, title, text, author, date_time))
-
-#     conn.commit()
-#     conn.close()
-#     return redirect(url_for('admin_panel'))
-
-
 if __name__ == '__main__':
     app.run(debug=True)
