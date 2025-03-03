@@ -2,7 +2,7 @@ import sqlite3  # подключаем Sqlite в проект
 import hashlib  # библиотека для хеширования !!! заменить на что-нибудь понадежнее !!!
 import os
 import datetime
-import re
+import git
 
 from werkzeug.utils import secure_filename
 from PIL import Image, ImageOps, ImageGrab
@@ -247,6 +247,19 @@ def update_content():
     conn.close()
 
     return redirect(url_for('admin_panel'))
+
+
+@app.route('update_server', methods=['POST'])
+def webhook():
+    if request.method == 'POST':
+        repo = git.Repo('https://github.com/railgum/ildar_site.git')
+        origin = repo.remotes.origin
+
+        origin.pull()
+
+        return 'Updated PythonAnyWhere successfully!', 200
+    else:
+        return 'Wrong endpoint', 400
 
 
 if __name__ == '__main__':
