@@ -86,19 +86,28 @@ def home():
             json_data[raw['idblock']] = []
 
         # Добавление данных в существующий ключ
-        json_data[raw['idblock']].append({
-            'id': raw['id'],
-            'short_title': raw['short_title'],
-            'img': raw['img'],
-            'altimg': raw['altimg'],
-            'title': raw['title'],
-            'contenttext': raw['contenttext'],
-            'author': raw['author'],
-            'timestampdata': raw['timestampdata']
-        })
+        if raw['is_active'] == 0:
+            continue
+        else:
+            json_data[raw['idblock']].append({
+                'id': raw['id'],
+                'short_title': raw['short_title'],
+                'img': raw['img'],
+                'altimg': raw['altimg'],
+                'title': raw['title'],
+                'contenttext': raw['contenttext'],
+                'author': raw['author'],
+                'timestampdata': raw['timestampdata'],
+                'is_active': raw['is_active']
+            })
+    context = {'json_data': json_data,
+               'SLIDER_ID': SLIDER_ID,
+               'MINICARDS_ID': MINICARDS_ID,
+               'FEATURETTE_ID': FEATURETTE_ID,
+               'FOOTER_ID': FOOTER_ID}
 
     # Загрузка и отображение главной страницы (landing page)
-    return render_template('landing.html', json_data=json_data)
+    return render_template('landing.html', **context)
 
 
 # страница формы логина в админ панель
@@ -123,10 +132,15 @@ def admin_login():
         conn.close()
         # проверяем сходятся ли данные формы с данными БД
         if user and user['password'] == hashed_password:
-            # если успешно, создаем сессию, в которую записываем id пользователя
-            session['user_id'] = user['id']
-            # и перенаправляем на /admin_panel
-            return redirect(url_for('admin_panel'))
+            # проверяем активен ли пользователь
+            if not user['is_admin']:
+                error = 'Пользователь заблокирован'
+                return render_template('login_adm.html', error=error)
+            else:
+                # если успешно, создаем сессию, в которую записываем id пользователя
+                session['user_id'] = user['id']
+                # и перенаправляем на /admin_panel
+                return redirect(url_for('admin_panel'))
         else:
             error = 'Неправильное имя пользователя или пароль'
 
@@ -175,7 +189,8 @@ def admin_panel():
             'title': raw['title'],
             'contenttext': raw['contenttext'],
             'author': raw['author'],
-            'timestampdata': raw['timestampdata']
+            'timestampdata': raw['timestampdata'],
+            'is_active': raw['is_active']
         })
     context = {
         'json_data': json_data,
@@ -207,18 +222,26 @@ def update_content():
         new_contenttext = request.form['new_contenttext']
         new_img_file = request.files['new_img']
         imgpath = process_img_file(new_img_file, short_title)
-        cursor.execute('INSERT INTO content (idblock, short_title, img, altimg, title, contenttext, author, timestampdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                       (idblock, short_title, imgpath, altimg, new_title, new_contenttext, author, date_time))
+        cursor.execute('INSERT INTO content (idblock, short_title, img, altimg, title, contenttext, author, timestampdata, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                       (idblock, short_title, imgpath, altimg, new_title, new_contenttext, author, date_time, True))
+    elif 'deactivate' in request.form:
+        content_id = request.form['id']
+        cursor.execute(
+            'UPDATE content SET is_active=FALSE WHERE id=?', (content_id,))
+    elif 'activate' in request.form:
+        content_id = request.form['id']
+        cursor.execute(
+            'UPDATE content SET is_active=True WHERE id=?', (content_id,))
     else:
         content_id = request.form['id']
         file = request.files['img']
         imgpath = process_img_file(file, short_title)
         if file:
-            cursor.execute('UPDATE content SET short_title=?, img=?, altimg=?, title=?, contenttext=?, author=?, timestampdata=? WHERE id=?',
-                           (short_title, imgpath, altimg, title, contenttext, author, date_time, content_id))
+            cursor.execute('UPDATE content SET short_title=?, img=?, altimg=?, title=?, contenttext=?, author=?, timestampdata=?, is_active=? WHERE id=?',
+                           (short_title, imgpath, altimg, title, contenttext, author, date_time, True, content_id))
         else:
-            cursor.execute('UPDATE content SET short_title=?, altimg=?, title=?, contenttext=?, author=?, timestampdata=? WHERE id=?',
-                           (short_title, altimg, title, contenttext, author, date_time, content_id))
+            cursor.execute('UPDATE content SET short_title=?, altimg=?, title=?, contenttext=?, author=?, timestampdata=?, is_active=? WHERE id=?',
+                           (short_title, altimg, title, contenttext, author, date_time, True, content_id))
 
     conn.commit()
     conn.close()
@@ -226,28 +249,28 @@ def update_content():
     return redirect(url_for('admin_panel'))
 
 
-# Добавление нового блока
-@app.route('/add_block', methods=['POST'])
-def add_block():
-    feat = request.form['new_featurette']
-    short_title = 'featurette' + feat
-    title = request.form['new_title_featurette']
-    text = request.form['new_contenttext_featurette']
-    file = request.files['new_img_featurette']
-    imgpath = process_img_file(file, 'features')
-    altimg = 'Photo'
-    author_id = request.form['user_id']
-    date_time = datetime.datetime.now().strftime('%d/%m/%y %H:%M')
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-    author = getOneValueFromBase(conn, 'username', 'users', author_id)
-    if file:
-        cursor.execute('INSERT INTO content (idblock, short_title, img, altimg, title, contenttext, author, timestampdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (
-            'features', short_title, imgpath, altimg, title, text, author, date_time))
+# # Добавление нового блока
+# @app.route('/add_block', methods=['POST'])
+# def add_block():
+#     feat = request.form['new_featurette']
+#     short_title = 'featurette' + feat
+#     title = request.form['new_title_featurette']
+#     text = request.form['new_contenttext_featurette']
+#     file = request.files['new_img_featurette']
+#     imgpath = process_img_file(file, 'features')
+#     altimg = 'Photo'
+#     author_id = request.form['user_id']
+#     date_time = datetime.datetime.now().strftime('%d/%m/%y %H:%M')
+#     conn = sqlite3.connect('database.db')
+#     cursor = conn.cursor()
+#     author = getOneValueFromBase(conn, 'username', 'users', author_id)
+#     if file:
+#         cursor.execute('INSERT INTO content (idblock, short_title, img, altimg, title, contenttext, author, timestampdata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (
+#             'features', short_title, imgpath, altimg, title, text, author, date_time))
 
-    conn.commit()
-    conn.close()
-    return redirect(url_for('admin_panel'))
+#     conn.commit()
+#     conn.close()
+#     return redirect(url_for('admin_panel'))
 
 
 if __name__ == '__main__':
