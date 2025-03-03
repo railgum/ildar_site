@@ -259,7 +259,7 @@ def webhook():
 
         return 'Updated PythonAnyWhere successfully!', 200
     else:
-        return 'Wrong endpoint', 400
+        return 'Wrong event type', 400
 
 
 if __name__ == '__main__':
