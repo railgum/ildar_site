@@ -1,15 +1,17 @@
+from mysql import connector
+from flask_mysqldb import MySQL
+from PIL import Image, ImageOps, ImageGrab
+from werkzeug.utils import secure_filename
+from config import *
+from flask import Flask, render_template, redirect, url_for, request, session
 import sqlite3  # подключаем Sqlite в проект
 import hashlib  # библиотека для хеширования !!! заменить на что-нибудь понадежнее !!!
 import os
 import datetime
 import git
 
-from werkzeug.utils import secure_filename
-from PIL import Image, ImageOps, ImageGrab
 # Обеспечивает безопасность имён файлов, загруженных пользователями, предотвращая атаки через манипуляции с файловой системой.
 
-from flask import Flask, render_template, redirect, url_for, request, session
-from config import *
 # Flask - библиотека для запуска нашего приложения Flask - app
 # render_template - нужен для того, чтобы ваша страница html отобразилась корректно
 # redirect - понадобится для обработки запросов формы, где мы перенаправим пользователя на страницу админ панели
@@ -20,14 +22,25 @@ from config import *
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 path_to_save_images = os.path.join(app.root_path, 'static', 'imgs')
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'password'
+app.config['MYSQL_DB'] = 'ildardb'
 
+
+mysql = MySQL(app)
 
 # Соединение с БД
 
 
 def get_db_connection():
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
+    conn = connector.connect(
+        host="localhost",
+        user="root",
+        password="password",
+        database="ildardb"
+    )
+    conn.row_factory = connector.Row
     return conn
 
 
@@ -212,7 +225,7 @@ def update_content():
     title = request.form['title']
     contenttext = request.form['contenttext']
 
-    conn = sqlite3.connect('database.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     author = getOneValueFromBase(conn, 'username', 'users', author_id)
 
@@ -262,4 +275,4 @@ def webhook():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
