@@ -209,7 +209,6 @@ def update_content():
     author_id = request.form['user_id']
     date_time = datetime.datetime.now().strftime('%d/%m/%y %H:%M')
     idblock = request.form['id_block']
-
     title = request.form['title']
     contenttext = request.form['contenttext']
 
