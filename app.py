@@ -25,6 +25,17 @@ HOST = os.getenv('MYSQL_HOST')
 USER = os.getenv('MYSQL_USER')
 PASSWORD = os.getenv('MYSQL_PASSWORD')
 DBNAME = os.getenv('MYSQL_DBNAME')
+SLIDER = os.getenv('SLIDER')
+MINICARDS = os.getenv('MINICARDS')
+FEATURETTE = os.getenv('FEATURETTE')
+MAX_SIZE_SLIDER = os.getenv('MAX_SIZE_SLIDER')
+MAX_SIZE_MINICARDS = os.getenv('MAX_SIZE_MINICARDS')
+MAX_SIZE_FEATURETTE = os.getenv('MAX_SIZE_FEATURETTE')
+FOOTER = os.getenv('FOOTER')
+FOOTER_ID = os.getenv('FOOTER_ID')
+SLIDER_ID = os.getenv('SLIDER_ID')
+MINICARDS_ID = os.getenv('MINICARDS_ID')
+FEATURETTE_ID = os.getenv('FEATURETTE_ID')
 
 
 mysql = MySQL(app)
@@ -49,7 +60,7 @@ def get_db_connection():
 
 # проверка расширения файла изображения
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in os.getenv('ALLOWED_EXTENSIONS')
 
 
 # Функция обработки изображения
