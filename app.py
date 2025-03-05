@@ -1,6 +1,6 @@
 from mysql.connector import connect, Error
 from flask_mysqldb import MySQL
-from PIL import Image, ImageOps, ImageGrab
+from PIL import Image, ImageOps
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template, redirect, url_for, request, session
 # import sqlite3  # подключаем Sqlite в проект
