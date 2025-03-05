@@ -2,7 +2,6 @@ from mysql.connector import connect, Error
 from flask_mysqldb import MySQL
 from PIL import Image, ImageOps, ImageGrab
 from werkzeug.utils import secure_filename
-from config import *
 from flask import Flask, render_template, redirect, url_for, request, session
 # import sqlite3  # подключаем Sqlite в проект
 import hashlib  # библиотека для хеширования !!! заменить на что-нибудь понадежнее !!!
