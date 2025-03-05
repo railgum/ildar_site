@@ -1,10 +1,10 @@
-from mysql import connector
+from mysql.connector import connect, Error
 from flask_mysqldb import MySQL
 from PIL import Image, ImageOps, ImageGrab
 from werkzeug.utils import secure_filename
 from config import *
 from flask import Flask, render_template, redirect, url_for, request, session
-import sqlite3  # подключаем Sqlite в проект
+# import sqlite3  # подключаем Sqlite в проект
 import hashlib  # библиотека для хеширования !!! заменить на что-нибудь понадежнее !!!
 import os
 import datetime
@@ -20,12 +20,12 @@ import git
 #
 
 app = Flask(__name__)
-app.secret_key = SECRET_KEY
+app.secret_key = os.getenv('SECRET_KEY')
 path_to_save_images = os.path.join(app.root_path, 'static', 'imgs')
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'password'
-app.config['MYSQL_DB'] = 'ildardb'
+HOST = os.getenv('MYSQL_HOST')
+USER = os.getenv('MYSQL_USER')
+PASSWORD = os.getenv('MYSQL_PASSWORD')
+DBNAME = os.getenv('MYSQL_DBNAME')
 
 
 mysql = MySQL(app)
@@ -34,14 +34,18 @@ mysql = MySQL(app)
 
 
 def get_db_connection():
-    conn = connector.connect(
-        host="localhost",
-        user="root",
-        password="password",
-        database="ildardb"
-    )
-    conn.row_factory = connector.Row
-    return conn
+    try:
+        with connect(
+            host=HOST,
+            user=USER,
+            password=PASSWORD,
+            database=DBNAME
+        ) as conn:
+            return conn.cursor()
+    except Error as e:
+        return e
+    # conn.row_factory = conn.Row
+    # return conn
 
 
 # проверка расширения файла изображения
