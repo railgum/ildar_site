@@ -21,6 +21,7 @@ import git
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 path_to_save_images = os.path.join(app.root_path, 'static', 'imgs')
+
 HOST = os.getenv('MYSQL_HOST')
 USER = os.getenv('MYSQL_USER')
 PASSWORD = os.getenv('MYSQL_PASSWORD')
@@ -37,7 +38,7 @@ SLIDER_ID = os.getenv('SLIDER_ID')
 MINICARDS_ID = os.getenv('MINICARDS_ID')
 FEATURETTE_ID = os.getenv('FEATURETTE_ID')
 
-
+print(HOST)
 mysql = MySQL(app)
 
 # Соединение с БД
@@ -289,4 +290,4 @@ def webhook():
 
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)
