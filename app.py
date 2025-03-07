@@ -39,6 +39,8 @@ MINICARDS_ID = os.getenv('MINICARDS_ID')
 FEATURETTE_ID = os.getenv('FEATURETTE_ID')
 
 print(HOST)
+print(USER)
+
 mysql = MySQL(app)
 
 # Соединение с БД
