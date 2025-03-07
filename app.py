@@ -1,8 +1,10 @@
 from mysql.connector import connect, Error
-from flask_mysqldb import MySQL
+# from flask_mysqldb import MySQL
 from PIL import Image, ImageOps
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template, redirect, url_for, request, session
+from dotenv import load_dotenv
+from flask_sqlalchemy import SQLAlchemy
 # import sqlite3  # подключаем Sqlite в проект
 import hashlib  # библиотека для хеширования !!! заменить на что-нибудь понадежнее !!!
 import os
@@ -18,9 +20,9 @@ import git
 # request - обработчик запросов GET/POST и других
 #
 
-app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
-path_to_save_images = os.path.join(app.root_path, 'static', 'imgs')
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+if os.path.exists(dotenv_path):
+    load_dotenv(dotenv_path)
 
 HOST = os.getenv('MYSQL_HOST')
 USER = os.getenv('MYSQL_USER')
@@ -38,14 +40,16 @@ SLIDER_ID = os.getenv('SLIDER_ID')
 MINICARDS_ID = os.getenv('MINICARDS_ID')
 FEATURETTE_ID = os.getenv('FEATURETTE_ID')
 
-print(HOST)
-print(USER)
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{USER}:{PASSWORD}@{HOST}/{DBNAME}'
 
-mysql = MySQL(app)
+app.secret_key = os.getenv('SECRET_KEY')
+path_to_save_images = os.path.join(app.root_path, 'static', 'imgs')
+
+db = SQLAlchemy(app)
+
 
 # Соединение с БД
-
-
 def get_db_connection():
     try:
         with connect(
