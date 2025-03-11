@@ -19,7 +19,7 @@
     <div class="container-fluid">
         <a class="navbar-brand" href="#">Логотип</a>
         <div class="d-flex align-items-center">
-            <span class="me-3">Привет, {{ name_admin }}</span>
+            <span class="me-3">Привет, {{ name_admin.username }}</span>
             <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary">Выход</a>
         </div>
     </div>
