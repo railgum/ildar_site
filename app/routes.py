@@ -1,5 +1,8 @@
-from models import db, Content, Users
-from app import *
+from flask import render_template, flash, redirect, url_for, request
+from models import db, Content, User
+from app import app
+from app.forms import LoginForm
+from config import *
 
 
 # render_template - нужен для того, чтобы ваша страница html отобразилась корректно
@@ -60,7 +63,7 @@ def admin_login():
 
         # соединение с БД
         # conn = get_db_connection()
-        user = Users.query.filter(Users.username == username).first()
+        user = User.query.filter(User.username == username).first()
 
         # проверяем сходятся ли данные формы с данными БД
         if user:
@@ -101,7 +104,7 @@ def admin_panel():
     # blocks = conn.execute('SELECT * FROM content').fetchall()
     blocks = Content.query.all()
     # name_admin = getName(conn, session['user_id'])
-    name_admin = db.session.query(Users).filter
+    name_admin = db.session.query(User).filter
     # name_admin = getOneValueFromBase(
     #     conn, 'username', 'users', session['user_id'])
     # conn.close()

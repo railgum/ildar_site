@@ -1,10 +1,11 @@
-from mysql.connector import connect, Error
 from PIL import Image, ImageOps
 from werkzeug.utils import secure_filename
-from flask import Flask, render_template, redirect, url_for, request, session
+from flask import Flask, request, session
 from dotenv import load_dotenv
 from models import db, Users, Content
 from views import *
+from app import app
+from config import *
 
 import hashlib  # библиотека для хеширования !!! заменить на что-нибудь понадежнее !!!
 import os
@@ -15,8 +16,6 @@ import click
 # Обеспечивает безопасность имён файлов, загруженных пользователями, предотвращая атаки через манипуляции с файловой системой.
 
 
-#
-
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
@@ -25,19 +24,9 @@ HOST = os.getenv('MYSQL_HOST')
 USER = os.getenv('MYSQL_USER')
 PASSWORD = os.getenv('MYSQL_PASSWORD')
 DBNAME = os.getenv('MYSQL_DBNAME')
-SLIDER = os.getenv('SLIDER')
-MINICARDS = os.getenv('MINICARDS')
-FEATURETTE = os.getenv('FEATURETTE')
-MAX_SIZE_SLIDER = os.getenv('MAX_SIZE_SLIDER')
-MAX_SIZE_MINICARDS = os.getenv('MAX_SIZE_MINICARDS')
-MAX_SIZE_FEATURETTE = os.getenv('MAX_SIZE_FEATURETTE')
-FOOTER = os.getenv('FOOTER')
-FOOTER_ID = os.getenv('FOOTER_ID')
-SLIDER_ID = os.getenv('SLIDER_ID')
-MINICARDS_ID = os.getenv('MINICARDS_ID')
-FEATURETTE_ID = os.getenv('FEATURETTE_ID')
 
-app = Flask(__name__)
+
+# app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{USER}:{PASSWORD}@{HOST}/{DBNAME}'
 
 app.secret_key = os.getenv('SECRET_KEY')
